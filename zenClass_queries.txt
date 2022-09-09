@@ -1,0 +1,62 @@
+//1.Find all the topics and tasks which are thought in the month of October
+db.topics.aggregate([
+    {
+        $project:{
+            topic_id:1,
+            _id:0,
+            topic:1,
+            task_available:1,
+            month:{'$month':'$date'}
+        }
+    },
+    {
+        $match:{month:10}
+    }
+]).pretty()
+
+--------------------------------------------------------------------------------------------------------------------
+
+//2. Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+db.company_drives.find({date:{'$gte':ISODate("2020-10-15"),$lte:ISODate("2020-10-31")}},{_id:0}).pretty()
+
+--------------------------------------------------------------------------------------------------------------------
+
+//3. Find all the company drives and students who are appeared for the placement.
+
+db.company_drives.aggregate({
+    $lookup:{
+    from:"users",
+    localField:"company_id",
+    foreignField:"placements.company_id",
+    as:"result"
+    }},
+    {
+        $project:{
+           "result.userId":1,
+           "result.name":1,
+           "result.placements":1,
+           company_id:1,
+           name:1,
+           date:1
+        }
+    }
+).pretty()
+
+------------------------------------------------------------------------------------------------------------------------
+
+//4. Find the number of problems solved by the user in codekata
+db.users.aggregate([
+    {
+        $group:{_id:"$name",problems:{$sum:{$sum:"$codekata.solved"}}}
+    }
+])
+
+-------------------------------------------------------------------------------------------------------------------------
+
+//5. Find all the mentors with who has the mentee's count more than 15
+db.mentors.find({mentees:{$gt:15}},{_id:0}).pretty()
+
+-------------------------------------------------------------------------------------------------------------------------
+
+//6. Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
+db.users.find({"absent.absentOn":{$gt:ISODate("2020-10-15"),$lt:ISODate("2020-10-31")}},{_id:0,name:1}).pretty()
